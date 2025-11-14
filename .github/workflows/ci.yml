@@ -15,6 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
       - name: Create build directory
         run: mkdir build
 
@@ -36,6 +41,20 @@ jobs:
             echo "✅ MSVC executable test passed"
           }
 
+      - name: Run Python tests (MSVC)
+        shell: pwsh
+        run: |
+          # 彻底设置UTF-8编码环境
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+          $env:PYTHONIOENCODING = "utf-8"
+          $env:PYTHONUTF8 = "1"
+          $env:LANG = "en_US.UTF-8"
+          
+          cd calculator_tests
+          python main.py
+
       - name: List generated files (MSVC)
         run: |
           cd build/lib
@@ -48,6 +67,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
       - name: Install MinGW
         shell: cmd
@@ -77,6 +101,20 @@ jobs:
             echo "✅ MinGW executable test passed"
           }
 
+      - name: Run Python tests (MinGW)
+        shell: pwsh
+        run: |
+          # 彻底设置UTF-8编码环境
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+          $env:PYTHONIOENCODING = "utf-8"
+          $env:PYTHONUTF8 = "1"
+          $env:LANG = "en_US.UTF-8"
+          
+          cd calculator_tests
+          python main.py
+
   linux-gcc:
     name: Linux GCC
     runs-on: ubuntu-latest
@@ -85,10 +123,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake
+          sudo apt-get install -y build-essential cmake python3 python3-pip
 
       - name: Create build directory
         run: mkdir build
@@ -111,6 +154,11 @@ jobs:
             echo "✅ GCC executable test passed"
           fi
 
+      - name: Run Python tests (GCC)
+        run: |
+          cd calculator_tests
+          PYTHONIOENCODING=utf-8 python3 main.py
+
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
@@ -120,8 +168,18 @@ jobs:
     steps:
       - name: Display test results
         run: |
-          echo "=== Build Test Results ==="
+          echo "=== 完整测试结果 ==="
           echo "Windows MSVC: ${{ needs.windows-msvc.result }}"
           echo "Windows MinGW: ${{ needs.windows-mingw.result }}"
           echo "Linux GCC: ${{ needs.linux-gcc.result }}"
-          echo "=========================="
+          echo "===================="
+          
+          if [[ "${{ needs.windows-msvc.result }}" == "success" && 
+                "${{ needs.windows-mingw.result }}" == "success" && 
+                "${{ needs.linux-gcc.result }}" == "success" ]]; then
+            echo "🎉 所有平台测试通过！"
+            exit 0
+          else
+            echo "❌ 部分测试失败"
+            exit 1
+          fi
