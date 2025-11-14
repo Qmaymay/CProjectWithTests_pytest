@@ -42,9 +42,16 @@ jobs:
           }
 
       - name: Run Python tests (MSVC)
-        shell: cmd
+        shell: pwsh
         run: |
-          chcp 65001 >nul
+          # 彻底设置UTF-8编码环境
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+          $env:PYTHONIOENCODING = "utf-8"
+          $env:PYTHONUTF8 = "1"
+          $env:LANG = "en_US.UTF-8"
+          
           cd calculator_tests
           python main.py
 
@@ -95,9 +102,16 @@ jobs:
           }
 
       - name: Run Python tests (MinGW)
-        shell: cmd
+        shell: pwsh
         run: |
-          chcp 65001 >nul
+          # 彻底设置UTF-8编码环境
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+          $env:PYTHONIOENCODING = "utf-8"
+          $env:PYTHONUTF8 = "1"
+          $env:LANG = "en_US.UTF-8"
+          
           cd calculator_tests
           python main.py
 
