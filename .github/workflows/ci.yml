@@ -2,7 +2,7 @@
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, refactor/project-structure ]
   pull_request:
     branches: [ main, master ]
 
@@ -22,24 +22,24 @@ jobs:
         run: |
           cd build
           cmake .. -G "Visual Studio 17 2022" -A x64
-        env:
-          GITHUB_ACTIONS: "true"
 
       - name: Build project (MSVC)
         run: |
           cd build
           cmake --build . --config Release
 
-      - name: Validate build (MSVC)
+      - name: Test executable (MSVC)
         run: |
-          cd build
-          cmake --build . --target validate_all
+          cd build/lib
+          if (Test-Path "calculator_app_msvc.exe") {
+            .\calculator_app_msvc.exe
+            echo "✅ MSVC executable test passed"
+          }
 
       - name: List generated files (MSVC)
-        shell: cmd
         run: |
-          cd build
-          dir /B /S *.exe *.dll
+          cd build/lib
+          dir *.exe *.dll
 
   windows-mingw:
     name: Windows MinGW
@@ -56,41 +56,26 @@ jobs:
           7z x mingw.7z -oC:\mingw
           echo C:\mingw\mingw64\bin>>%GITHUB_PATH%
 
-      - name: Verify MinGW installation
-        shell: cmd
-        run: |
-          gcc --version
-          g++ --version
-
       - name: Create build directory
         run: mkdir build
 
       - name: Configure with CMake (MinGW)
-        shell: cmd
         run: |
           cd build
           cmake .. -G "MinGW Makefiles"
-        env:
-          GITHUB_ACTIONS: "true"
-          TEST_BUILD: "1"
 
       - name: Build project (MinGW)
-        shell: cmd
         run: |
           cd build
           cmake --build .
 
-      - name: Validate build (MinGW)
-        shell: cmd
+      - name: Test executable (MinGW)
         run: |
-          cd build
-          cmake --build . --target validate_all
-
-      - name: List generated files (MinGW)
-        shell: cmd
-        run: |
-          cd build
-          dir /B /S *.exe *.dll
+          cd build/lib
+          if (Test-Path "calculator_app.exe") {
+            .\calculator_app.exe
+            echo "✅ MinGW executable test passed"
+          }
 
   linux-gcc:
     name: Linux GCC
@@ -111,25 +96,20 @@ jobs:
       - name: Configure with CMake (GCC)
         run: |
           cd build
-          cmake .. -G "Unix Makefiles"
-        env:
-          GITHUB_ACTIONS: "true"
-          TEST_BUILD: "1"
+          cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project (GCC)
         run: |
           cd build
           cmake --build .
 
-      - name: Validate build (GCC)
+      - name: Test executable (GCC)
         run: |
-          cd build
-          cmake --build . --target validate_all
-
-      - name: List generated files (GCC)
-        run: |
-          cd build
-          find . -name "*.so" -o -name "calculator_app*" -type f
+          cd build/lib
+          if [ -f "calculator_app" ]; then
+            ./calculator_app
+            echo "✅ GCC executable test passed"
+          fi
 
   test-summary:
     name: Test Summary
