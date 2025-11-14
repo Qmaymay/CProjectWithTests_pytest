@@ -42,7 +42,9 @@ jobs:
           }
 
       - name: Run Python tests (MSVC)
+        shell: cmd
         run: |
+          chcp 65001 >nul
           cd calculator_tests
           python main.py
 
@@ -93,7 +95,9 @@ jobs:
           }
 
       - name: Run Python tests (MinGW)
+        shell: cmd
         run: |
+          chcp 65001 >nul
           cd calculator_tests
           python main.py
 
@@ -139,7 +143,7 @@ jobs:
       - name: Run Python tests (GCC)
         run: |
           cd calculator_tests
-          python3 main.py
+          PYTHONIOENCODING=utf-8 python3 main.py
 
   test-summary:
     name: Test Summary
