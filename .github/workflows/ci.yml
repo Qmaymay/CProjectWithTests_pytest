@@ -53,7 +53,7 @@ jobs:
           $env:LANG = "en_US.UTF-8"
           
           cd calculator_tests
-          python main.py
+          python test_runner.py
 
       - name: List generated files (MSVC)
         run: |
