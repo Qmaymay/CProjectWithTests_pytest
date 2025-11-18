@@ -179,27 +179,3 @@ jobs:
           cd calculator_tests
           PYTHONIOENCODING=utf-8 python3 test_runner.py  # 修改这里：main.py → test_runner.py
 
-  test-summary:
-    name: Test Summary
-    runs-on: ubuntu-latest
-    needs: [windows-msvc, windows-mingw, linux-gcc]
-    if: always()
-
-    steps:
-      - name: Display test results
-        run: |
-          echo "=== 完整测试结果 ==="
-          echo "Windows MSVC: ${{ needs.windows-msvc.result }}"
-          echo "Windows MinGW: ${{ needs.windows-mingw.result }}"
-          echo "Linux GCC: ${{ needs.linux-gcc.result }}"
-          echo "===================="
-          
-          if [[ "${{ needs.windows-msvc.result }}" == "success" && 
-                "${{ needs.windows-mingw.result }}" == "success" && 
-                "${{ needs.linux-gcc.result }}" == "success" ]]; then
-            echo "🎉 所有平台测试通过！"
-            exit 0
-          else
-            echo "❌ 部分测试失败"
-            exit 1
-          fi
