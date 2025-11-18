@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 计算器性能测试 - 响应时间、吞吐量测试
-简化版本，不依赖外部库
+使用pytest框架
 """
 
 import ctypes
@@ -10,6 +10,7 @@ import sys
 import os
 import time
 import statistics
+import pytest
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,139 +27,67 @@ def time_function(func, *args, iterations=1000):
         func(*args)
         end_time = time.perf_counter()
         times.append((end_time - start_time) * 1000000)  # 转换为微秒
-
     return times
 
 
-def test_library_performance(lib, lib_name):
-    """测试单个库的性能"""
-    print(f"⚡ 测试 {lib_name} 性能...")
-
-    error = CalcErrorCode(CalcErrorCode.CALC_SUCCESS)
-
-    operations = [
-        ("加法", lib.add, (123, 456)),
-        ("乘法", lib.multiply, (123, 456)),
-        ("除法", lib.divide, (1000, 3, ctypes.byref(error))),
-    ]
-
-    results = {}
-    for name, func, args in operations:
-        times = time_function(func, *args, iterations=1000)
-        avg_time = statistics.mean(times)
-        std_dev = statistics.stdev(times) if len(times) > 1 else 0
-        results[name] = {
-            'avg': avg_time,
-            'std': std_dev,
-            'min': min(times),
-            'max': max(times)
-        }
-        print(f"  📊 {name}: {avg_time:.2f} ± {std_dev:.2f} μs")
-
-    return results
+# 多库测试固件
+@pytest.fixture(params=library_files if library_files else [], scope="function")
+def lib(request):
+    """为每个库提供实例"""
+    lib_file = request.param
+    lib_path = os.path.join(get_lib_dir(), lib_file)
+    lib = ctypes.CDLL(lib_path)
+    setup_library_functions(lib)
+    return lib
 
 
-def test_library_throughput(lib):
-    """测试单个库的吞吐量"""
-    print("⚡ 测试运算吞吐量...")
+class TestPerformance:
+    """性能测试类"""
 
-    error = CalcErrorCode(CalcErrorCode.CALC_SUCCESS)
-
-    # 测试连续操作的吞吐量
-    operations = 10000
-    start_time = time.perf_counter()
-
-    for i in range(operations):
-        # 混合操作
-        if i % 4 == 0:
-            lib.add(i, 1)
-        elif i % 4 == 1:
-            lib.multiply(i, 2)
-        elif i % 4 == 2:
+    @pytest.mark.parametrize("operation_name,func_name,args", [
+        ("加法", "add", (123, 456)),
+        ("减法", "subtract", (456, 123)),
+        ("乘法", "multiply", (123, 456)),
+        ("除法", "divide", (1000, 3)),
+        ("平方", "square", (25,)),
+        ("立方", "cube", (10,)),
+    ])
+    def test_operation_performance(self, lib, operation_name, func_name, args):
+        """测试运算性能"""
+        # 为需要错误参数的操作特殊处理
+        if func_name == "divide":
             error = CalcErrorCode(CalcErrorCode.CALC_SUCCESS)
-            lib.divide(i + 1, 3, ctypes.byref(error))
+            actual_args = (args[0], args[1], ctypes.byref(error))
+        else:
+            actual_args = args
+        
+        func = getattr(lib, func_name)
+        times = time_function(func, *actual_args, iterations=100)
+        avg_time = statistics.mean(times)
+        
+        print(f"📊 {operation_name}: {avg_time:.2f} μs")
+        assert avg_time < 10000, f"{operation_name}性能异常: {avg_time:.2f} μs"
 
-    end_time = time.perf_counter()
-    total_time = end_time - start_time
-    throughput = operations / total_time
+    def test_throughput(self, lib):
+        """测试吞吐量"""
+        error = CalcErrorCode(CalcErrorCode.CALC_SUCCESS)
+        operations = 1000
+        start_time = time.perf_counter()
 
-    print(f"  📈 完成 {operations} 次混合操作")
-    print(f"  ⏱️  总时间: {total_time:.3f} 秒")
-    print(f"  🚀 吞吐量: {throughput:.0f} 操作/秒")
+        for i in range(operations):
+            if i % 4 == 0:
+                lib.add(i, 1)
+            elif i % 4 == 1:
+                lib.multiply(i, 2)
+            elif i % 4 == 2:
+                lib.divide(i + 1, 3, ctypes.byref(error))
 
-    return throughput
+        total_time = time.perf_counter() - start_time
+        throughput = operations / total_time
 
-
-def run_all_performance_tests():
-    """运行所有性能测试"""
-    print("⚡ 计算器性能测试套件")
-    print("=" * 50)
-
-    if not library_files:
-        print("❌ 没有找到动态库")
-        return None
-
-    print(f"测试 {len(library_files)} 个编译器版本: {', '.join(library_files)}")
-
-    performance_results = {}
-
-    # 测试每个库
-    for lib_file in library_files:
-        try:
-            lib = ctypes.CDLL(os.path.join(get_lib_dir(), lib_file))
-            setup_library_functions(lib)
-
-            print(f"\n🔍 测试 {lib_file}")
-            print("-" * 30)
-
-            # 测试性能
-            perf_results = test_library_performance(lib, lib_file)
-            print("")
-
-            # 测试吞吐量
-            throughput = test_library_throughput(lib)
-
-            performance_results[lib_file] = {
-                'performance': perf_results,
-                'throughput': throughput
-            }
-
-        except Exception as e:
-            print(f"❌ {lib_file} 性能测试失败: {e}")
-            performance_results[lib_file] = None
-
-    # 生成性能报告总结
-    print("\n" + "=" * 50)
-    print("📊 性能测试总结")
-    print("=" * 50)
-
-    successful_tests = sum(1 for results in performance_results.values() if results)
-
-    # 只输出总体统计，不重复详细数据
-    print(f"✅ 成功测试了 {successful_tests}/{len(library_files)} 个编译器")
-
-    if successful_tests > 0:
-        # 计算平均性能
-        all_avg_times = []
-        all_throughputs = []
-
-        for lib_file, results in performance_results.items():
-            if results:
-                perf_data = results['performance']
-                avg_times = [data['avg'] for data in perf_data.values()]
-                all_avg_times.extend(avg_times)
-                all_throughputs.append(results['throughput'])
-
-        if all_avg_times:
-            avg_op_time = statistics.mean(all_avg_times)
-            avg_throughput = statistics.mean(all_throughputs)
-
-            print(f"📈 平均操作时间: {avg_op_time:.2f} μs")
-            print(f"🚀 平均吞吐量: {avg_throughput:.0f} 操作/秒")
-            print(f"⚡ 性能表现正常")
-
-    return performance_results
+        print(f"🚀 吞吐量: {throughput:.0f} 操作/秒")
+        assert throughput > 10, f"吞吐量过低: {throughput:.0f} 操作/秒"
 
 
 if __name__ == "__main__":
-    results = run_all_performance_tests()
+    pytest.main([__file__, "-v"])

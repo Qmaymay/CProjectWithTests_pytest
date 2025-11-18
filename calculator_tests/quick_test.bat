@@ -14,11 +14,11 @@ cd /d "%~dp0"
 echo 当前目录: %CD%
 
 :: 检查main.py是否存在
-if exist main.py (
-    echo 找到main.py，开始运行Python测试...
-    python main.py
+if exist test_runner.py (
+    echo 找到maintest_runner.py，开始运行Python测试...
+    python test_runner.py
 ) else (
-    echo 错误: 找不到main.py
+    echo 错误: 找不到test_runner.py
     echo 当前目录文件列表:
     dir
     pause
