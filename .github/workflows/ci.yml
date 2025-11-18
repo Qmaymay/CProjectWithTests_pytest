@@ -44,6 +44,7 @@ jobs:
       - name: Run Python tests (MSVC)
         run: |
           cd calculator_tests
+           $env:PYTHONIOENCODING = "utf-8"
           python test_runner.py
 
       - name: List generated files (MSVC)
@@ -92,6 +93,7 @@ jobs:
       - name: Run Python tests (MinGW)
         run: |
           cd calculator_tests
+           $env:PYTHONIOENCODING = "utf-8"
           python test_runner.py
 
       - name: List generated files (MinGW)
@@ -137,4 +139,5 @@ jobs:
       - name: Run Python tests (GCC)
         run: |
           cd calculator_tests
+           $env:PYTHONIOENCODING = "utf-8"
           python test_runner.py
