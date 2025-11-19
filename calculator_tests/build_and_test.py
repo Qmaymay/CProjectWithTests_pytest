@@ -92,7 +92,7 @@ def main():
     tests_dir = "calculator_tests"
     if os.path.exists(tests_dir):
         result = subprocess.run(
-            "python main.py", 
+            "python test_runner.py", 
             shell=True, 
             cwd=tests_dir
         )
