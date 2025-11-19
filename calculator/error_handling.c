@@ -44,26 +44,3 @@ CALC_API bool is_valid_number(double x) {
     return !isnan(x) && !isinf(x);
 }
 
-CALC_API bool is_valid_angle_mode(const char* mode) {
-    if (mode == NULL) return false;
-    return strcmp(mode, "degrees") == 0 || strcmp(mode, "radians") == 0;
-}
-
-CALC_API bool is_valid_trig_function(const char* func) {
-    if (func == NULL) return false;
-
-    const char* valid_funcs[] = {
-            "sin", "cos", "tan",
-            "asin", "acos", "atan",
-            "to_radians", "to_degrees"
-    };
-
-    for (int  i = 0; i < (int)(sizeof(valid_funcs)/sizeof(valid_funcs[0])); i++) {
-        if (strcmp(func, valid_funcs[i]) == 0) return true;
-    }
-    return false;
-}
-
-CALC_API bool is_in_range(double x, double min, double max) {
-    return x >= min && x <= max;
-}
