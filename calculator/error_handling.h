@@ -2,16 +2,22 @@
 // Created by Admin on 2025/11/2.
 //
 
-#ifndef CALCULATORPROJECT_ERROR_HANDLING_H
-#define CALCULATORPROJECT_ERROR_HANDLING_H
+#ifndef ERROR_HANDLING_H
+#define ERROR_HANDLING_H
 
 #include <stdbool.h>
 
 #ifdef _WIN32
     #define CALC_API __declspec(dllexport)
 #else
-    #define CALC_API
+    #define CALC_API 
 #endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 // 错误码定义
 typedef enum {
@@ -32,13 +38,10 @@ CALC_API const char* error_code_to_string(CalcErrorCode code);
 
 // 输入验证函数
 CALC_API bool is_valid_number(double x);
-CALC_API bool is_valid_angle_mode(const char* mode);
-CALC_API bool is_valid_trig_function(const char* func);
-CALC_API bool is_in_range(double x, double min, double max);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CALCULATORPROJECT_ERROR_HANDLING_H
+#endif // ERROR_HANDLING_H

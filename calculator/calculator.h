@@ -32,12 +32,12 @@ CALC_API double power(double base, double exponent, CalcErrorCode* error);
 
 
 // 三角运算
-CALC_API double trig_calc(double input, const char* angle_mode, const char* func,
-                 CalcErrorCode* error);
+CALC_API double trig_calc(double input, const char* angle_mode, const char* func, CalcErrorCode* error) ;
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif // CALCULATOR_H
+

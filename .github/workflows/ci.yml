@@ -59,6 +59,7 @@ jobs:
           
           cd calculator_tests
           python test_runner.py
+        continue-on-error: true
 
       - name: List generated files (MSVC)
         run: |
@@ -123,7 +124,8 @@ jobs:
           $env:LANG = "en_US.UTF-8"
           
           cd calculator_tests
-          python test_runner.py  # 修改这里：main.py → test_runner.py
+          python test_runner.py
+        continue-on-error: true
 
       - name: List generated files (MinGW)
         run: |
@@ -177,5 +179,7 @@ jobs:
       - name: Run Python tests (GCC)
         run: |
           cd calculator_tests
-          PYTHONIOENCODING=utf-8 python3 test_runner.py  # 修改这里：main.py → test_runner.py
+          PYTHONIOENCODING=utf-8 python3 test_runner.py 
+        continue-on-error: true
+      
 

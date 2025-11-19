@@ -126,10 +126,6 @@ void test_validation_functions(void) {
 
     // 直接使用验证函数（不需要通过计算器）
     printf("验证数字 3.14: %s\n", is_valid_number(3.14) ? "有效" : "无效");
-    printf("验证角度模式 'degrees': %s\n",
-           is_valid_angle_mode("degrees") ? "有效" : "无效");
-    printf("验证函数名 'tan': %s\n",
-           is_valid_trig_function("tan") ? "有效" : "无效");
 
     // 测试无效输入
     double zero = 0.0;
