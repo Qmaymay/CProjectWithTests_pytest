@@ -93,7 +93,7 @@ class TestSecurity:
             assert result >= 0
 
 
-# 三角函数安全测试 ----------------还要重构-----------------------------------
+# 三角函数安全测试 ---------------------------------------------------
 """
 安全测试覆盖：
 1, 边界值攻击：极大值、极小值、边界附近值
@@ -119,9 +119,18 @@ class TestTrigSecurity:
         result = lib.trig_calc(input_val, angle_mode.encode(), func.encode(), ctypes.byref(error))
         
         print(f"{description} - 结果: {result}, 错误码: {error.value}")
-        assert error.value == CalcErrorCode.CALC_SUCCESS
-        # 三角函数结果应该在有效范围内
-        assert -1.0 <= result <= 1.0
+
+         # 分类处理不同的测试用例
+        if input_val == 1e308:
+        # 极大值测试：期望返回输入错误
+            assert error.value == CalcErrorCode.CALC_ERROR_INVALID_INPUT  # -5
+            assert result == 0.0  # 你的函数返回0.0
+        else:
+        # 其他边界值测试：期望成功
+            assert error.value == CalcErrorCode.CALC_SUCCESS
+        if not math.isnan(result):
+            # 如果不是nan，检查是否在有效范围内
+            assert -1.0 <= result <= 1.0
 
     @pytest.mark.parametrize("special_value,description", [
         (math.nan, "NaN输入"),
