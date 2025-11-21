@@ -6,6 +6,7 @@ if "%1"=="release" set BUILD_CONFIG=Release
 
 echo 构建Calculator项目 (%BUILD_CONFIG%模式)...
 
+:: ==================== 构建逻辑 ====================
 :: 总是使用build目录
 if exist build rmdir /s /q build
 mkdir build
@@ -16,7 +17,7 @@ cmake --build . --config %BUILD_CONFIG%
 
 echo ✅ %BUILD_CONFIG%构建成功!
 
-:: 测试
+:: ============== 冒烟测试可执行文件 ================
 cd lib
 if exist calculator_app_msvc.exe (
     echo 运行测试...
@@ -26,4 +27,6 @@ if exist calculator_app_msvc.exe (
     dir *.exe
 )
 
+
 pause
+

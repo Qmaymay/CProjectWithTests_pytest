@@ -1,13 +1,6 @@
 //
 // Created by Admin on 2025/11/7.
 //
-/*
- * calculator_app 运行说明
- * CLion 有两种运行模式：
- * - CMake 模式：通过 CMakeLists.txt，正确链接所有依赖
- * - 单文件模式：快速测试单个文件，但无法处理复杂依赖
- * 与测试python代码共享动态库时，main.c 下点绿色三角只会编译main.c
- */
 
 #include <stdio.h>
 #include "calculator.h"  // 只需要包含这个，会自动包含 error_handling.h
@@ -20,8 +13,8 @@ void test_basic_operations(void) {
     printf("5 + 3 = %d\n", add(5, 3));
     printf("10 - 4 = %d\n", subtract(10, 4));
 
-    // 需要错误检查的运算
-    CalcErrorCode error;
+    // 需要错误检查的运算, 采用随机值为初始值，这样函数不正确工作时error打印出来就是随机值
+    CalcErrorCode error;  // 不初始化，保持随机值
 
     // 正常除法
     double result = divide(10, 2, &error);
@@ -120,18 +113,6 @@ void test_trig_functions(void) {
     }
 }
 
-// 直接使用验证函数
-void test_validation_functions(void) {
-    printf("\n=== 输入验证测试 ===\n");
-
-    // 直接使用验证函数（不需要通过计算器）
-    printf("验证数字 3.14: %s\n", is_valid_number(3.14) ? "有效" : "无效");
-
-    // 测试无效输入
-    double zero = 0.0;
-    double invalid_num = zero / zero;  // 运行时计算，编译时不会检测
-    printf("验证 NaN 数字: %s\n", is_valid_number(invalid_num) ? "有效" : "无效");
-}
 
 int main(void) {
     printf("计算器测试程序\n");
@@ -139,7 +120,6 @@ int main(void) {
     test_advanced_operations();
     test_power_function();
     test_trig_functions();
-    test_validation_functions();
 
     printf("\n所有测试完成！\n");
     return 0;

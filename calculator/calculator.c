@@ -58,8 +58,6 @@ CALC_API double sqrt_calc(double x, CalcErrorCode* error) {
 }
 
 
-#include <math.h>
-
 CALC_API double power(double base, double exponent, CalcErrorCode* error) {
     if (error) *error = CALC_SUCCESS;
     
@@ -93,24 +91,94 @@ CALC_API double power(double base, double exponent, CalcErrorCode* error) {
 }
 
 
-// 修改 contains_embedded_null 函数
-static int contains_embedded_null(const char* str) {
-    if (!str) return 0;
+// 安全检查函数名，防止内嵌空字节攻击
+static int is_safe_function_name(const char* func) {
+    if (!func) return 0;
     
-    // 只检查前几个字符是否有内嵌空字节
-    for (int i = 0; i < 10 && str[i] != '\0'; i++) {
-        if (str[i] == '\0' && i > 0) {
-            return 1; // 中间发现空字节
+    // 检查前几个字符，寻找第一个空字节
+    int first_null_pos = -1;
+    for (int i = 0; i < 5; i++) {
+        if (func[i] == '\0') {
+            first_null_pos = i;
+            break;
         }
     }
+    
+    // 如果没有找到空字节，说明字符串太长或不规范
+    if (first_null_pos == -1) {
+        return 0;
+    }
+    
+    // 关键修改：只在第一个空字节之后立即有非空字节时才认为是攻击
+    // 如果第一个空字节之后都是空字节，那是正常的字符串结尾
+    int has_embedded_null = 0;
+    if (first_null_pos < 9) {  // 确保有后续字符可以检查
+        // 检查第一个空字节之后的一个字符
+        if (func[first_null_pos + 1] != '\0') {
+            // 第一个空字节之后立即有非空字节，说明是内嵌空字节攻击
+            has_embedded_null = 1;
+        }
+    }
+    
+    if (has_embedded_null) {
+        return 0;
+    }
+    
+    // 现在检查函数名是否在允许列表中
+    int length = first_null_pos;
+    
+    if (length == 3) {
+        // 检查 "sin", "cos", "tan"
+        if (func[0] == 's' && func[1] == 'i' && func[2] == 'n') return 1;
+        if (func[0] == 'c' && func[1] == 'o' && func[2] == 's') return 1;
+        if (func[0] == 't' && func[1] == 'a' && func[2] == 'n') return 1;
+    }
+    else if (length == 4) {
+        // 检查 "asin", "acos"
+        if (func[0] == 'a' && func[1] == 's' && func[2] == 'i' && func[3] == 'n') return 1;
+        if (func[0] == 'a' && func[1] == 'c' && func[2] == 'o' && func[3] == 's') return 1;
+    }
+    
     return 0;
 }
+
 
 
 // 三角函数相关函数
 CALC_API double trig_calc(double input, const char* angle_mode, const char* func, CalcErrorCode* error) {
     if (error) *error = CALC_SUCCESS;
 
+    // 严格的空指针检查 - 必须在任何指针访问之前
+    if (angle_mode == NULL) {
+        // 在确认指针为NULL时，避免任何函数调用
+        if (error) *error = CALC_ERROR_INVALID_TRIG;
+        return 0.0; // 在确认指针为NULL时，避免任何函数调用
+    }
+
+    if (func == NULL) {
+        // 同样，避免函数调用
+        set_error("NULL func pointer");
+        if (error) *error = CALC_ERROR_INVALID_TRIG;
+        return 0.0;
+    }
+
+    // 直接使用参数，假设调用者传递了有效指针
+    // 调试输出（只在开发时启用）
+    #ifdef DEBUG
+    printf("DEBUG: Received func: ");
+    for (int i = 0; i < 15; i++) {
+        if (func[i] == '\0') {
+            printf("\\0 ");
+        } else if (func[i] >= 32 && func[i] <= 126) {
+            printf("%c ", func[i]);
+        } else {
+            printf("? ");
+        }
+    }
+    printf("\n");
+    #endif
+
+    // 只有确认所有指针都有效后，才使用 set_error
     // 输入验证
     if (!is_valid_number(input)) {
         set_error("Invalid input number: %f", input);
@@ -125,13 +193,6 @@ CALC_API double trig_calc(double input, const char* angle_mode, const char* func
         return 0.0;
     }
 
-    // 检查空指针
-    if (!angle_mode || !func) {
-        set_error("NULL pointer in angle_mode or func");
-        if (error) *error = CALC_ERROR_INVALID_TRIG;  // -4
-        return 0.0;
-    }
-
 
     // 现有的角度模式验证
     if (strcmp(angle_mode, "degrees") != 0 && strcmp(angle_mode, "radians") != 0) {
@@ -140,14 +201,10 @@ CALC_API double trig_calc(double input, const char* angle_mode, const char* func
         return 0.0;
     }
 
-    // 函数名验证
-    if (strcmp(func, "sin") != 0 && 
-        strcmp(func, "cos") != 0 && 
-        strcmp(func, "tan") != 0 &&
-        strcmp(func, "asin") != 0 &&
-        strcmp(func, "acos") != 0) {
+    // 用这个安全方案替换上面的复杂检查
+    if (!is_safe_function_name(func)) {
         set_error("Invalid trig function: %s", func);
-        if (error) *error = CALC_ERROR_INVALID_TRIG;  // -4
+        if (error) *error = CALC_ERROR_INVALID_TRIG;
         return 0.0;
     }
 

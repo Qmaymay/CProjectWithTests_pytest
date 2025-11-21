@@ -195,25 +195,13 @@ if(TARGET calculator_app)
     add_dependencies(validate_all calculator_app)
 endif()
 
-# ==================== 清理目标 ====================
-add_custom_target(clean_all
-        COMMAND ${CMAKE_COMMAND} -E echo "Cleaning generated files..."
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-        COMMENT "Cleaning all generated files in build directory"
-)
-
 # ==================== 安装规则 ====================
-install(TARGETS calc
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION lib
-)
 
-if(TARGET calculator_app)
-    install(TARGETS calculator_app
-            RUNTIME DESTINATION bin
-    )
-endif()
+# 所有文件安装到同一目录
+install(TARGETS calc calculator_app
+        RUNTIME DESTINATION .
+        LIBRARY DESTINATION .
+)
 
 # ==================== 配置完成信息 ====================
 message(STATUS "")
@@ -225,16 +213,12 @@ message(STATUS "Library Type: ${LIBRARY_TYPE}")
 message(STATUS "Library Output: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 message(STATUS "Runtime Output: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS "Available Targets:")
-message(STATUS "   - calc (shared library: $<TARGET_FILE_NAME:calc>)")
-if(TARGET calculator_app)
-    message(STATUS "   - calculator_app (executable: $<TARGET_FILE_NAME:calculator_app>)")
-endif()
 message(STATUS "   - validate_all (verify build)")
 message(STATUS "   - clean_all (clean build artifacts)")
 message(STATUS "")
 message(STATUS "Expected Output Files:")
-message(STATUS "   Shared Library: $<TARGET_FILE:calc>")
-if(TARGET calculator_app)
-    message(STATUS "   Executable: $<TARGET_FILE:calculator_app>")
-endif()
+
 message(STATUS "======================================")
+
+
+
